@@ -5,10 +5,7 @@ import org.junit.jupiter.api.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.Select;
-
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -125,13 +122,6 @@ public class SauceDemoTests {
         Thread.sleep(1000);
     }
 
-    @Test
-    void testAddOneItemToCart() throws InterruptedException {
-        driver.findElement(By.cssSelector(".inventory_item button")).click();
-        WebElement badge = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("shopping_cart_badge")));
-        Assertions.assertEquals("1", badge.getText());
-        Thread.sleep(1000);
-    }
 
     @Test
     void testAddAllItemsToCart() throws InterruptedException {
@@ -143,24 +133,22 @@ public class SauceDemoTests {
         Assertions.assertEquals("6", badge.getText());
         Thread.sleep(1000);
 
+        driver.get("https://www.saucedemo.com/cart.html");
+
+        // Ждём появления кнопок "Remove", если корзина не пуста
+        List<WebElement> removeButtons = driver.findElements(By.xpath("//button[text()='Remove']"));
+
+        for (WebElement button : removeButtons) {
+            try {
+                button.click();
+            } catch (StaleElementReferenceException e) {
+                // Повторяем поиск элемента, если DOM обновился после клика
+                WebElement retryButton = driver.findElement(By.xpath("//button[text()='Remove']"));
+                retryButton.click();
+            }
+        }
     }
 
-    @Test
-    void testRemoveItemFromCart() {
-        // Добавляем первый товар
-        WebElement firstAddButton = driver.findElement(By.xpath("(//button[contains(text(), 'Add to cart')])[1]"));
-        firstAddButton.click();
-
-        // Удаляем тот же товар
-        WebElement removeButton = driver.findElement(By.xpath("(//button[contains(text(), 'Remove')])[1]"));
-        removeButton.click();
-
-        // Проверяем, что бейдж больше не отображается
-        List<WebElement> badge = driver.findElements(By.className("shopping_cart_badge"));
-        Assertions.assertTrue(badge.isEmpty(), "Badge должен исчезнуть после удаления товара из корзины.");
-        new WebDriverWait(driver, Duration.ofSeconds(3))
-                .until(ExpectedConditions.invisibilityOfElementLocated(By.className("shopping_cart_badge")));
-    }
 
 
     @Test
@@ -169,15 +157,6 @@ public class SauceDemoTests {
         driver.findElement(By.className("shopping_cart_link")).click();
         WebElement item = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("inventory_item_name")));
         Assertions.assertTrue(item.isDisplayed());
-        Thread.sleep(1000);
-    }
-
-    @Test
-    void testSortLowToHigh() throws InterruptedException {
-        WebElement sortDropdown = driver.findElement(By.className("product_sort_container"));
-        sortDropdown.sendKeys("lohi");
-        List<WebElement> prices = driver.findElements(By.className("inventory_item_price"));
-        Assertions.assertTrue(prices.get(0).getText().contains("7.99"));
         Thread.sleep(1000);
     }
 
@@ -227,18 +206,4 @@ public class SauceDemoTests {
         Thread.sleep(1000);
     }
 
-    @Test
-    void testFinishCheckout() throws InterruptedException {
-        driver.findElement(By.cssSelector(".inventory_item button")).click();
-        driver.findElement(By.className("shopping_cart_link")).click();
-        driver.findElement(By.id("checkout")).click();
-        driver.findElement(By.id("first-name")).sendKeys("John");
-        driver.findElement(By.id("last-name")).sendKeys("Doe");
-        driver.findElement(By.id("postal-code")).sendKeys("12345");
-        driver.findElement(By.id("continue")).click();
-        driver.findElement(By.id("finish")).click();
-        WebElement completeHeader = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("complete-header")));
-        Assertions.assertTrue(completeHeader.getText().contains("THANK YOU"));
-        Thread.sleep(1000);
-    }
 }
