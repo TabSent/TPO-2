@@ -43,13 +43,6 @@ public class SauceDemoTests {
 
     }
 
-    void clearCart() {
-        driver.get("https://www.saucedemo.com/cart.html");
-        List<WebElement> removeButtons = driver.findElements(By.xpath("//button[contains(text(), 'Remove')]"));
-        for (WebElement remove : removeButtons) {
-            remove.click();
-        }
-    }
 
 
     @AfterEach
